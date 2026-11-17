@@ -62,3 +62,4 @@
 | 2026-11-17 | 팀장 / Antigravity | `js/engine3d.js`, `HANDOVER.md` | 계단·에스컬레이터와 바닥이 만나는 상·하부 경계에 접속 발판, 노란색 경고 점자블록, 안전선 및 난간 지주 표시 추가 |
 | 2026-11-17 | 팀장 / Antigravity | `js/stations.js`, `js/engine3d.js`, `HANDOVER.md` | 일직선 역 구조를 실제 지형(경성대·부경대역 대연사거리 교차 돌출형, 서면역 중앙대로 남북축 1호선 + 가야대로 동서축 2호선 십자(+) 교차 환승 구조)에 맞게 개편 |
 | 2026-11-17 | 팀장 / Antigravity | `js/stations.js`, `HANDOVER.md` | 서면역 실제 출구 15개(1~15번) 전체 반영 및 1↔2호선 환승역 전개도(B2 환승 통로·환승 E/V·B3 2호선 섬식 양방향) 적용 |
+| 2026-11-17 | 팀장 / Antigravity | `js/stations.js`, `HANDOVER.md` | 경성대·부경대역 1차 현실화: 2번·3번 출구 외부 E/V 연계, 남천(2-1 앞)·대연(4-1 앞) 승강장 E/V 위치 및 B2 GIVEN ZONE 반영 |
