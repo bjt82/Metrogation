@@ -295,6 +295,29 @@
         const h = box(parent, L, 0.07, 0.12, (s.x0 + s.x1) / 2, (s.y0 + s.y1) / 2 + 1.0, zz, 0x15181b, { r: 0.6 });
         h.rotation.z = ang;
       });
+
+      // 계단·에스컬레이터와 바닥이 만나는 상·하부 경계 표시 (접속 참 + 경고 점자블록 + 안전선)
+      const plateCol = isEsc ? 0x94a3b8 : 0xb0b5ba;
+      const warnCol = isEsc ? 0xf59e0b : 0xfacc15;
+      const ends = [
+        { x: s.x0, y: s.y0, outward: -dir },
+        { x: s.x1, y: s.y1, outward: dir }
+      ];
+      ends.forEach((end) => {
+        // 바닥과 계단/에스컬레이터가 맞닿는 접속 발판(콤 플레이트 / 계단 참)
+        box(parent, 0.7, 0.06, s.w + 0.16, end.x + end.outward * 0.35, end.y + 0.03, s.z, plateCol, { m: 0.65, r: 0.35 });
+        // 단차 주의 노란색 점자블록(경고 블록)
+        const warnPad = box(parent, 0.55, 0.055, s.w, end.x + end.outward * 0.98, end.y + 0.035, s.z, warnCol, {
+          map: tactTex(1, Math.max(1, Math.round(s.w * 2))),
+          r: 0.5
+        });
+        tactileMeshes.push(warnPad);
+        // 경계 안전선 + 양쪽 지주(볼라드)로 바닥 접속 지점 명확화
+        box(parent, 0.09, 0.07, s.w + 0.2, end.x, end.y + 0.04, s.z, isEsc ? 0xef4444 : 0xeab308, { r: 0.4 });
+        [s.z - s.w / 2, s.z + s.w / 2].forEach((zz) => {
+          box(parent, 0.12, 0.95, 0.12, end.x, end.y + 0.475, zz, railCol, { m: 0.8, r: 0.3 });
+        });
+      });
     }
 
     function loadStation(station) {

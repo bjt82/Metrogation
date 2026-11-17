@@ -59,3 +59,4 @@
 | 2026-11-17 | 팀장 / Antigravity | `index.html`, `styles.css`, `js/*`, `README.md` | 경성대·부경대역 및 서면역 샘플 기반 교통약자 3D 길안내 초안 구현 및 GitHub Pages 배포 |
 | 2026-11-17 | 팀장 / Antigravity | `HANDOVER.md`, `CLAUDE.md`, `GEMINI.md`, `AGENTS.md` | 다중 AI 협업을 위한 자동 인수인계 문서 체계 구축 |
 | 2026-11-17 | 팀장 / Antigravity | `js/stations.js`, `HANDOVER.md` | 실제 부산교통공사 자료 기반으로 경성대·부경대역(3번 출구 E/V, 개찰구 밖 장애인 화장실, 역무실 내 수유실) 및 서면역(1호선 B2 상대식, 2호선 B3 섬식, 1·2호선측 장애인 화장실, 15번 출구 충전기 등) 구조 반영 |
+| 2026-11-17 | 팀장 / Antigravity | `js/engine3d.js`, `HANDOVER.md` | 계단·에스컬레이터와 바닥이 만나는 상·하부 경계에 접속 발판, 노란색 경고 점자블록, 안전선 및 난간 지주 표시 추가 |
