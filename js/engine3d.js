@@ -151,13 +151,13 @@
       return mesh;
     }
 
-    function slab(parent, w, d, y, z, colors) {
+    function slab(parent, w, d, y, x, z, colors) {
       const th = 0.9;
       const side = new THREE.MeshStandardMaterial({ map: concTex(w / 6, 1), roughness: 0.95 });
       const side2 = new THREE.MeshStandardMaterial({ map: concTex(d / 6, 1), roughness: 0.95 });
       const top = new THREE.MeshStandardMaterial({ map: tileTex(colors[0], colors[1], w / 2, d / 2), roughness: 0.35, metalness: 0.05 });
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, th, d), [side2, side2, top, side, side, side]);
-      mesh.position.set(0, y - th / 2, z);
+      mesh.position.set(x || 0, y - th / 2, z);
       mesh.castShadow = mesh.receiveShadow = true;
       parent.add(mesh);
     }
@@ -239,6 +239,7 @@
     let floorGroups = {};
     let elevatorCabs = [];
     let trainGroup = null;
+    let crossTrainGroups = [];
     let tactileMeshes = [];
     let facilityMarkers = {};
     let exitTags = {};
@@ -331,6 +332,7 @@
 
       floorGroups = {};
       elevatorCabs = [];
+      crossTrainGroups = [];
       tactileMeshes = [];
       facilityMarkers = {};
       exitTags = {};
@@ -349,7 +351,7 @@
 
       // 층 바닥
       station.slabs.forEach((s) => {
-        slab(floorGroups[s.floor] || stationGroup, s.w, s.d, s.y, s.z, s.colors);
+        slab(floorGroups[s.floor] || stationGroup, s.w, s.d, s.y, s.x || 0, s.z, s.colors);
       });
 
       // 기둥
@@ -388,6 +390,30 @@
       }
       trainGroup.position.set(90, 0.45, 0);
       stationGroup.add(trainGroup);
+
+      // 교차 노선 선로 및 열차 (예: 서면역 1호선 남북 Z축)
+      if (station.crossTracks && station.crossTracks.length) {
+        station.crossTracks.forEach((ct) => {
+          const grp = floorGroups[ct.floor] || stationGroup;
+          const cy = ct.y;
+          box(grp, 3.0, 0.5, ct.length, 0, cy - 1.45, 0, 0xffffff, { map: bedTex(), r: 1 });
+          [-0.72, 0.72].forEach((x) => box(grp, 0.12, 0.16, ct.length, x, cy - 1.05, 0, 0xb9c0c7, { m: 0.9, r: 0.3 }));
+          [-1.5, 1.5].forEach((x) => {
+            box(grp, 0.05, 2.3, ct.length, x, cy + 1.2, 0, 0x9fc3d6, { o: 0.22, r: 0.1 });
+            box(grp, 0.1, 0.1, ct.length, x, cy + 2.35, 0, 0xcfd4d8, { m: 0.8, r: 0.3 });
+          });
+          const ctTrain = new THREE.Group();
+          for (let i = 0; i < 5; i++) {
+            const z = (i - 2) * 6.9;
+            box(ctTrain, 2.7, 2.9, 6.6, 0, 0, z, 0xd5d9dd, { m: 0.75, r: 0.3 });
+            box(ctTrain, 2.74, 0.95, 6.64, 0, 0.5, z, 0x1a2430, { m: 0.3, r: 0.15 });
+            box(ctTrain, 2.74, 0.3, 6.64, 0, -0.55, z, ct.trainColorHex, { r: 0.5 });
+          }
+          ctTrain.position.set(0, cy + 0.45, 90);
+          stationGroup.add(ctTrain);
+          crossTrainGroups.push({ group: ctTrain, y: cy + 0.45 });
+        });
+      }
 
       // 방면 안내판
       station.track.directions.forEach((d) => {
@@ -702,6 +728,10 @@
       if (trainGroup) {
         trainGroup.position.x = trainX(T);
       }
+
+      crossTrainGroups.forEach((ct, idx) => {
+        ct.group.position.z = trainX(T + idx * 5 + 6);
+      });
 
       elevatorCabs.forEach((c) => {
         c.mesh.position.y = c.yMin + Math.abs(Math.sin(T * 0.45)) * c.span;
