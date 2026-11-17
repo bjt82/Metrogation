@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>메트로게이션 (Metrogation) — 교통약자 지하철역 3D 길찾기</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- 3D 캔버스 컨테이너 -->
+  <div id="canvas-wrap" aria-label="지하철역 3D 실내 지도"></div>
+
+  <!-- 1인칭 주행 중 상단 HUD -->
+  <div id="hud" class="hud hidden" role="status" aria-live="polite">
+    <div class="hud-badge" id="hud-floor">B1</div>
+    <div class="hud-text">
+      <div class="hud-title" id="hud-step-title">안내 시작</div>
+      <div class="hud-sub" id="hud-step-desc">경로를 따라 이동합니다.</div>
+    </div>
+    <button type="button" id="hud-exit-fp" class="btn-chip active">조감도 복귀</button>
+  </div>
+
+  <!-- 좌측 / 하단 컨트롤 패널 -->
+  <aside id="panel" aria-label="경로 및 편의시설 안내 패널">
+    <div class="panel-accent" id="line-accent"></div>
+
+    <header class="panel-header">
+      <div class="title-row">
+        <div>
+          <div class="brand-tag">METROGATION · 교통약자 이동도움</div>
+          <h1 id="station-title">경성대·부경대역</h1>
+        </div>
+        <select id="station-select" aria-label="지하철역 선택"></select>
+      </div>
+      <div class="a11y-bar">
+        <button type="button" id="btn-large-text" class="a11y-btn" aria-pressed="false" title="큰 글씨 모드">가+ 큰글씨</button>
+        <button type="button" id="btn-high-contrast" class="a11y-btn" aria-pressed="false" title="고대비 모드">고대비</button>
+        <button type="button" id="btn-tts" class="a11y-btn" aria-pressed="false" title="음성 안내 켜기/끄기">🔊 음성안내</button>
+      </div>
+    </header>
+
+    <!-- 교통약자 유형 선택 -->
+    <section class="sec">
+      <h2>1. 이동 유형 선택</h2>
+      <div class="profile-grid" id="profiles" role="radiogroup" aria-label="교통약자 이동 유형"></div>
+    </section>
+
+    <!-- 출발 / 도착 선택 -->
+    <section class="sec">
+      <h2>2. 출발지 · 목적지</h2>
+      <div class="route-selects">
+        <label class="field">
+          <span>출발</span>
+          <select id="start-select" aria-label="출발지 선택"></select>
+        </label>
+        <button type="button" id="btn-swap" class="swap-btn" title="출발지와 목적지 바꾸기" aria-label="출발지와 목적지 바꾸기">⇅</button>
+        <label class="field">
+          <span>도착</span>
+          <select id="end-select" aria-label="목적지 선택"></select>
+        </label>
+      </div>
+    </section>
+
+    <!-- 교통약자 편의시설 바로가기 -->
+    <section class="sec">
+      <h2>3. 교통약자 편의시설 (클릭 시 위치 확인)</h2>
+      <div class="chip-row" id="facilities"></div>
+      <div id="facility-card" class="facility-card hidden">
+        <div class="fc-head">
+          <strong id="fc-name"></strong>
+          <span class="fc-floor" id="fc-floor"></span>
+        </div>
+        <p id="fc-desc"></p>
+        <div class="fc-actions">
+          <button type="button" id="fc-go" class="btn-primary-sm">여기로 길찾기</button>
+          <button type="button" id="fc-close" class="btn-ghost-sm">닫기</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 시뮬레이션 & 시점 제어 -->
+    <section class="sec">
+      <h2>4. 3D 시점 &amp; 1인칭 이동 시뮬레이션</h2>
+      <div class="sim-controls">
+        <button type="button" id="btn-fp-toggle" class="btn-primary">▶ 1인칭 주행 시작</button>
+        <button type="button" id="btn-fp-pause" class="btn-chip hidden">일시정지</button>
+        <button type="button" id="btn-reset-cam" class="btn-chip">시점 초기화</button>
+      </div>
+      <div id="sim-progress-wrap" class="sim-progress hidden">
+        <input type="range" id="sim-slider" min="0" max="1000" value="0" aria-label="시뮬레이션 진행률">
+        <span id="sim-pct">0%</span>
+      </div>
+      <div class="floor-row" id="floors" aria-label="층별 보기"></div>
+    </section>
+
+    <!-- 경로 결과 및 단계별 안내 -->
+    <section class="sec">
+      <h2>5. 맞춤 경로 안내</h2>
+      <div class="summary-box" id="route-summary"></div>
+      <div class="warning-box hidden" id="route-warning"></div>
+      <ol class="steps" id="route-steps"></ol>
+    </section>
+
+    <!-- 도움 요청 버튼 -->
+    <footer class="panel-footer">
+      <button type="button" id="btn-help-call" class="help-btn">🆘 역무원 도움 요청 · 비상 안내</button>
+    </footer>
+  </aside>
+
+  <!-- 모바일 패널 접기/펼치기 버튼 -->
+  <button type="button" id="mobile-toggle" class="mobile-toggle" aria-expanded="true">안내 패널 접기 ▾</button>
+
+  <!-- 조작 힌트 -->
+  <div id="hint">드래그 회전 · 휠/핀치 확대 · 우클릭 이동 · 단계 클릭 시 카메라 이동</div>
+
+  <!-- 역무원 도움 요청 모달 -->
+  <div id="help-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+    <div class="modal-card">
+      <h3 id="help-modal-title">역무원 이동 도움 요청 안내</h3>
+      <p id="help-modal-body"></p>
+      <div class="modal-info">
+        <div><strong>역무실 위치:</strong> <span id="help-office-loc">B1 대합실 중앙</span></div>
+        <div><strong>지원 서비스:</strong> 휠체어 리프트, 이동 보조, 시각장애인 안내 동행</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="help-fly-office" class="btn-primary">역무실 위치 3D로 보기</button>
+        <button type="button" id="help-close" class="btn-chip">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js r128 (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <!-- Metrogation 모듈 -->
+  <script src="js/stations.js"></script>
+  <script src="js/routing.js"></script>
+  <script src="js/engine3d.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
